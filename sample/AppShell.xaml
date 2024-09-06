@@ -4,8 +4,12 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:The49.Maui.BottomSheet.Sample"
-    Shell.FlyoutBehavior="Disabled"
-    Shell.NavBarIsVisible="False">
+    Shell.NavBarIsVisible="True"
+    Shell.TabBarIsVisible="True">
+
+    <!-- Note: We show the NavBar and TabBar to verify regular bottom sheets show
+    over (in front of) them, while "page" bottom sheets show under (behind) them.
+    -->
 
     <ShellContent
         Title="Home"
@@ -15,6 +19,5 @@
     <FlyoutItem>
         <ShellContent ContentTemplate="{DataTemplate local:ModalPage}" Route="ModalPage" />
     </FlyoutItem>
-
 
 </Shell>

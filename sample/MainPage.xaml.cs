@@ -168,6 +168,20 @@ public partial class MainPage : ContentPage
             Command = new Command(OpenCustomizeBehavior),
         },
 #endif
+#if ANDROID
+        new DemoEntry
+        {
+            Title = "Modal Sheet (Inside Page)",
+            Description = "Shows behind the navigation bar, flyout, etc.",
+            Command = new Command(OpenModalSheet_WithinPage),
+        },
+        new DemoEntry
+        {
+            Title = "Non-Modal Sheet (Inside Page)",
+            Description = "Shows behind the navigation bar, flyout, etc.",
+            Command = new Command(OpenNonModalSheet_WithinPage),
+        },
+#endif
     };
 
     private void OpenSimpleSheet()
@@ -437,6 +451,42 @@ public partial class MainPage : ContentPage
             page.Controller.SheetPresentationController.PreferredCornerRadius = 2;
         };
         page.ShowAsync(Window);
+    }
+#endif
+
+#if ANDROID
+    void OpenModalSheet_WithinPage()
+    {
+        var page = new SimplePage();
+        page.Detents = new DetentsCollection()
+        {
+            new FullscreenDetent(),
+            new ContentDetent(),
+        };
+        page.HasBackdrop = true;
+        var b = new Button
+        {
+            Text = "Go to page"
+        };
+
+        var g = new TapGestureRecognizer
+        {
+            Command = new Command(() =>
+            {
+                page.DismissAsync(false);
+                Shell.Current.GoToAsync("//ModalPage");
+            }),
+        };
+
+        b.GestureRecognizers.Add(g);
+        page.SetExtraContent(b);
+        page.ShowAsync(this);
+    }
+
+    void OpenNonModalSheet_WithinPage()
+    {
+        var sheet = new ScrollSheet();
+        sheet.ShowAsync(this);
     }
 #endif
 

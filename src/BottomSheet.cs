@@ -107,6 +107,30 @@ public partial class BottomSheet : ContentView
         return completionSource.Task;
     }
 
+    /// <summary>
+    /// Shows the bottom sheet "within" the page.
+    /// The sheet will be obscured by flyout page and shows vertically above
+    /// navigation bar/tab bar.
+    /// </summary>
+    public Task ShowAsync(Page page, bool animated = true)
+    {
+        var completionSource = new TaskCompletionSource();
+        void OnShown(object? sender, EventArgs e)
+        {
+            Shown -= OnShown;
+            completionSource.SetResult();
+        }
+        Shown += OnShown;
+
+        if (SelectedDetent is null)
+        {
+            SelectedDetent = GetDefaultDetent();
+        }
+        page.AddLogicalChild(this);
+        BottomSheetManager.Show(page, this, animated);
+        return completionSource.Task;
+    }
+
     public Task DismissAsync(bool animated = true)
     {
         _dismissOrigin = DismissOrigin.Programmatic;

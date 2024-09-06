@@ -9,6 +9,10 @@ internal partial class BottomSheetManager
     private static nfloat _keyboardHeight;
     private static object _keyboardDidHideObserver;
 
+    // TODO: Implement this in iOS!
+    static partial void PlatformShow(Page page, BottomSheet sheet, bool animated)
+    {}
+
     static partial void PlatformShow(Window window, BottomSheet sheet, bool animated)
     {
         sheet.Parent = window;

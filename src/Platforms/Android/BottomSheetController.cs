@@ -1,16 +1,17 @@
-﻿using Android.Views;
-using Microsoft.Maui.Platform;
-using Google.Android.Material.BottomSheet;
-using Android.Widget;
+﻿using Android.Content;
 using Android.Content.Res;
+using Android.Graphics.Drawables;
+using Android.Views;
+using Android.Widget;
+using AndroidX.AppCompat.App;
+using AndroidX.Core.View;
+using Google.Android.Material.AppBar;
+using Google.Android.Material.BottomSheet;
+using Google.Android.Material.Color;
+using Google.Android.Material.Internal;
+using Microsoft.Maui.Platform;
 using AView = Android.Views.View;
 using AWindow = Android.Views.Window;
-using AndroidX.Core.View;
-using AndroidX.AppCompat.App;
-using Google.Android.Material.Internal;
-using Google.Android.Material.Color;
-using Android.Graphics.Drawables;
-using Android.Content;
 using Insets = AndroidX.Core.Graphics.Insets;
 
 namespace The49.Maui.BottomSheet;
@@ -179,6 +180,7 @@ public class BottomSheetController
     }
 
     static StayOnFrontView _stayOnFront;
+    private StayOnFrontView _appBarStayOnFront;
 
     internal IDictionary<Detent, int> _states;
     internal IDictionary<Detent, double> _heights;
@@ -200,10 +202,19 @@ public class BottomSheetController
 
     int BottomInset => UseNavigationBarArea ? 0 : Insets.Bottom;
 
-    public BottomSheetController(IMauiContext windowMauiContext, BottomSheet sheet)
+    /// <summary>
+    /// If the sheet is to be shown "inside" the page, i.e. under any flyout page,
+    /// and vertically above the navigation bars, tab bars if any.
+    /// In such a case, we don't use the "global" window's <see cref="StayOnFrontView"/>, but
+    /// add one as a sibling of the <see cref="AppBarLayout"/>.
+    /// </summary>
+    private readonly bool _showNextToAppBarLayout;
+
+    public BottomSheetController(IMauiContext windowMauiContext, BottomSheet sheet, bool showNextToAppBarLayout)
     {
         _mauiContext = windowMauiContext;
         _sheet = sheet;
+        _showNextToAppBarLayout = showNextToAppBarLayout;
     }
 
     internal void CalculateHeights(double maxSheetHeight)
@@ -256,7 +267,6 @@ public class BottomSheetController
 
     public void Dismiss(bool animated)
     {
-
         if (animated)
         {
             _windowContainer?.Backdrop.AnimateOut();
@@ -346,14 +356,24 @@ public class BottomSheetController
         }
     }
 
-    static void EnsureStayOnFrontView(Context context)
+    private void EnsureStayOnFrontView(Context context)
     {
-        if (_stayOnFront is null || !_stayOnFront.IsAttachedToWindow)
+        ref StayOnFrontView stayOnFront = ref (_showNextToAppBarLayout ? ref _appBarStayOnFront : ref _stayOnFront);
+
+        if (stayOnFront is null || !stayOnFront.IsAttachedToWindow)
         {
-            _stayOnFront = new StayOnFrontView(context);
+            stayOnFront = new StayOnFrontView(context);
             var window = ((AppCompatActivity)context).Window;
+
             var parentView = window?.DecorView as ViewGroup;
-            parentView.AddView(_stayOnFront);
+
+            if (_showNextToAppBarLayout)
+            {
+                AppBarLayout appBarLayout = parentView.GetFirstChildOfType<AppBarLayout>();
+                parentView = appBarLayout.Parent as ViewGroup;
+            }
+
+            parentView.AddView(stayOnFront);
         }
     }
 
@@ -541,7 +561,8 @@ public class BottomSheetController
 
         EnsureWindowContainer();
 
-        _stayOnFront.AddView(_windowContainer);
+        StayOnFrontView stayOnFront = _showNextToAppBarLayout ? _appBarStayOnFront : _stayOnFront;
+        stayOnFront.AddView(_windowContainer);
 
         _frame.RemoveAllViews();
 
